@@ -6,13 +6,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 bot = telebot.TeleBot(os.getenv('TOKEN'))
+zoa = 0
 
 log = int(os.getenv('sslog'))
 chat = int(os.getenv('sschat'))
 id0 = int(os.getenv('ssid0'))
 id1 = int(os.getenv('ssid1'))
+id2 = int(os.getenv('ssid2'))
 
-# id2 =
 # id3 =
 # id4 =
 # id5 =
@@ -23,7 +24,9 @@ id1 = int(os.getenv('ssid1'))
 # id10 =
 # id11 =
 blackList = []
-whiteList = [id0, id1]
+whiteList = [id0, id1, id2]
+Nsubjects = 100
+subjects = [0]*Nsubjects
 @bot.message_handler(commands=['help'])
 def help(message):
     if message.chat.id in whiteList:
@@ -63,6 +66,10 @@ def item(message):
     global x
     a = types.ReplyKeyboardRemove()
     x = message.text[3:]
+    for i in range(Nsubjects):
+        if subjects[i] == 0:
+            subjects[i] = str(message.chat.id) + ':' + str(x)
+            break
     msg = bot.send_message(message.chat.id, 'Напишите ДЗ (\U0000261Dмедиафайлы прикрепляются отдельно, комментарием к посту\U0000261D)', reply_markup=a)
     bot.register_next_step_handler(msg, item2)
 
@@ -70,8 +77,18 @@ def item2(message):
     global x2
     if message.content_type == 'text':
         x2 = message.text
-        bot.send_message(chat, '#' + x + '\n' + x2)
-        bot.send_message(log, '@' + str(message.from_user.username) + '\n' + str(message.chat.id) + '\n' + '#' + x + '\n' + str(message.text))
+        zoa = 0
+        for i in range(Nsubjects):
+            A1 = str(subjects[i])
+            A = A1.split(':', 2)
+            if A[0] == str(message.chat.id):
 
-    bot.send_message(message.chat.id, 'ДЗ отправлено успешно \U0001F60E')
+                bot.send_message(chat, '#' + str(A[1]) + '\n' + x2)
+                bot.send_message(log,
+                                 '@' + str(message.from_user.username) + '\n' + str(message.chat.id) + '\n' + '#' + str(
+                                     A[1]) + '\n' + str(message.text))
+                subjects[i] = 0
+                bot.send_message(message.chat.id, 'ДЗ отправлено успешно \U0001F60E')
+                break
+
 bot.polling(none_stop=True)
